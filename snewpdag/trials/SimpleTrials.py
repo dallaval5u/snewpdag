@@ -29,6 +29,8 @@ So we keep burst_id the same, but count using trial_id.
 """
 import sys
 import numpy as np
+from pip._internal.utils import logging
+
 from snewpdag.dag import Node
 from snewpdag.dag.app import configure, inject
 
