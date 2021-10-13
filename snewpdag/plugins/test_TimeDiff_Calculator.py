@@ -1,5 +1,5 @@
 """
-test_TimeDiff_Calculator - not sure of what it is actually doing (something to do with time
+test_TimeDiff_Calculator - not sure of what it is actually doing (something to do with time)
 It is more to test the structure of a plugin
 (taken from Wiktor's Chi2Calculator)
 Configuration parameters:
