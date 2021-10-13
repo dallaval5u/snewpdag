@@ -1,12 +1,14 @@
 """
-Pass - a pass-through node
-
+test_TimeDiff_Calculator - not sure of what it is actually doing (something to do with time
+It is more to test the structure of a plugin
+(taken from Wiktor's Chi2Calculator)
 Configuration parameters:
-  'line':  print a line every n events.  0 if no print.  Default 100.
-  'dump':  dump data dictionary every n events.  0 if no print.  Default 0.
-
+    detector_list: list of strings, ["first_detector", "second_detector", ...]    \
+                the list of detectors that we want to include in the calculations  \
+                options: "HK", "IC", "JUNO", "KM3", "SK"                           / same as in NeutrinoArrivalTime
+    detector_location: csv file name ('detector_location.csv')                  __/
 Output json:
-  input json passed on unmodified
+  undefined
 """
 import csv
 import logging
