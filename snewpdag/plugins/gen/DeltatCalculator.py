@@ -1,23 +1,18 @@
 """
-DeltatCalculator: Look up detector1 and detector2 in data['neutrino_time'], and compute the time difference
-                    between the observed t0s
-Constructor Arguments:
-    detector1: the name of the first detector
-    detector2: name of the second detector
+DeltatCalculator: compute the time difference between the observed t0s
+                    from the data[neutrino_time] field of two detectors.
+
 Output:
-    Time difference between the respective t0s
+    Time difference between the respective t0s, (s,ns)
 """
 
 import logging
-
 import numpy as np
-
 from snewpdag.dag import Node, lib
 
 
 class DeltatCalculator(Node):
         def __init__(self, **kwargs):
-            #self.nth = nth  # input parameter, specifying which event to choose
             self.valid = [False, False]  # flags indicating valid data from sources
             self.t = [0.0, 0.0]  # observed first nu event time for each detector
             self.h = [(), ()]  # histories from each source
@@ -36,7 +31,6 @@ class DeltatCalculator(Node):
                 return False
 
             newrevoke = False
-            #self.t[index] = data['neutrino_time'][1]
             self.t[index] = data['neutrino_time']
             if self.t[index] == None:
                 if self.valid[index]:
@@ -54,7 +48,6 @@ class DeltatCalculator(Node):
 
             # do the calculation if we have two valid inputs
             if self.valid == [True, True]:
-                #data['observed_dt'] = self.t[0] - self.t[1]
                 #compute time difference in sec and ns:
                 Deltat= np.subtract(self.t[0], self.t[1])
                 data['observed_dt'] = tuple(lib.normalize_time_difference(Deltat))
