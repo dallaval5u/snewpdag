@@ -1,5 +1,6 @@
 from .Pass import Pass
 
+from .Chi2Calculator import Chi2Calculator
 from .TimeSeriesInput import TimeSeriesInput
 from .TimeDistInput import TimeDistInput
 from .TimeDistFileInput import TimeDistFileInput
