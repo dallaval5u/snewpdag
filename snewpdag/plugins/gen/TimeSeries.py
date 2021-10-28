@@ -17,14 +17,6 @@ import matplotlib.pyplot as plt
 from snewpdag.dag import Node
 from . import TimeDistSource
 
-#rdallava: function used to insert a dictionary into a tuple
-def add_dictionary_to_a_tuple(dictionary):
-  my_tuple = ()
-  my_tuple = list(my_tuple)
-  my_tuple.append(dictionary)
-  my_tuple = tuple(my_tuple)
-
-  return my_tuple
 
 class TimeSeries(TimeDistSource):
 
@@ -42,6 +34,15 @@ class TimeSeries(TimeDistSource):
     #print('Trial:', len(self.mu), self.name)
     #exit()
 
+  # rdallava: function used to insert a dictionary into a tuple
+  def add_dictionary_to_a_tuple(self, dictionary):
+    my_tuple = ()
+    my_tuple = list(my_tuple)
+    my_tuple.append(dictionary)
+    my_tuple = tuple(my_tuple)
+
+    return my_tuple
+
   def alert(self, data):
     tdelay = data['sig_t_delay'] if 'sig_t_delay' in data else 0
     nev = Node.rng.poisson(self.mean)
@@ -56,7 +57,7 @@ class TimeSeries(TimeDistSource):
     if 'gen' in data:
       data['gen'].update(ngen,)
       #rdallava: Combine.py is looking for a tuple. Inserting data['gen'] into a tuple.
-      tuple_dict = add_dictionary_to_a_tuple(data['gen'])
+      tuple_dict = self.add_dictionary_to_a_tuple(data['gen'])
       data['gen'] = tuple_dict
 
     else:
