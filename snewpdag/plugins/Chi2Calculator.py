@@ -22,7 +22,6 @@ from datetime import datetime
 
 from snewpdag.dag import Node
 
-
 class Chi2Calculator(Node):
     def __init__(self, detector_list, detector_location,
                 NSIDE, **kwargs):
@@ -66,7 +65,6 @@ class Chi2Calculator(Node):
         det0_info = self.detector_info[det_0]
 
         return measured, measured_det_info, det0_time, det0_info
-
 
     # Generates precision matrix (inverse of covariance matrix)
     def generatePrecisionMatrix(self, measured_det_info, det0_info):
@@ -165,13 +163,15 @@ class Chi2Calculator(Node):
         return map
 
 
-    def alert(self, data):
+    # calculate skymap given two or more detectors data
+    def calculate_skymap(self, data):
+        logging.error(data)
         time = data['neutrino_time']
         if 'detector_id' in data:
             det = data['detector_id']
         else:
             det = self.last_source
-
+        logging.error(det)
         self.measured_times[det] = time
 
         self.map[self.last_source] = data.copy()
@@ -185,24 +185,31 @@ class Chi2Calculator(Node):
         for s, ns in measured.values():
             sum_s += s
             sum_ns += ns
-        self.arrival = (sum_s/(len(measured)+1), sum_ns/(len(measured)+1))
+        self.arrival = (sum_s / (len(measured) + 1), sum_ns / (len(measured) + 1))
+        logging.error(self.arrival)
 
         # Takes only the detectors for which time has been measured
-        if len(measured) < 2:
+        if len(measured) < 1:
             return False
-        ndof = len(measured) - 1
-
+        n_of_detectors = len(measured) + 1  #rdallava: +1 accounting for the fact that python start counting from 0
         self.precision_matrix = self.generatePrecisionMatrix(measured_det_info, det0_info)
         map = self.generate_map(measured, measured_det_info, det0_time, det0_info)
 
+        logging.error(map)
         data['map'] = map
-        data['ndof'] = ndof
+        data['n_of_detectors'] = n_of_detectors
 
         hlist = []
         for k in self.map:
             if self.map[k]['valid']:
                 hlist.append(self.map[k]['history'])
         data['history'].combine(hlist)
+        logging.error(data)
+        return data
+
+
+    def alert(self, data):
+        data = self.calculate_skymap(data)
         return data
 
     def revoke(self, data):
@@ -211,42 +218,11 @@ class Chi2Calculator(Node):
             det = data['detector_id']
         else:
             det = self.last_source
-
-        # The time hasn't changed, no point in recalculating the skymap
+        # Check if the time has changed, otherwise there is no point in recalculating the skymap
         if self.measured_times[det] == time:
             return False
 
-        self.measured_times[det] = time
-
-        self.map[self.last_source] = data.copy()
-        self.map[self.last_source]['history'] = data['history'].copy()
-        self.map[self.last_source]['valid'] = True
-
-        measured, measured_det_info, det0_time, det0_info = self.get_time_dicts()
-
-        sum_s = det0_time[0]
-        sum_ns = det0_time[1]
-        for s, ns in measured.values():
-            sum_s += s
-            sum_ns += ns
-        self.arrival = (sum_s/(len(measured)+1), sum_ns/(len(measured)+1))
-
-        # Takes only the detectors for which time has been measured
-        if len(measured) < 2:
-            return False
-        ndof = len(measured) - 1
-
-        self.precision_matrix = self.generatePrecisionMatrix(measured_det_info, det0_info)
-        map = self.generate_map(measured, measured_det_info, det0_time, det0_info)
-
-        data['map'] = map
-        data['ndof'] = ndof
-
-        hlist = []
-        for k in self.map:
-            if self.map[k]['valid']:
-                hlist.append(self.map[k]['history'])
-        data['history'].combine(hlist)
+        data = self.calculate_skymap(data)
         return data
 
 
