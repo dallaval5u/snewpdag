@@ -162,16 +162,19 @@ class Chi2Calculator(Node):
 
         return map
 
-
     # calculate skymap given two or more detectors data
     def calculate_skymap(self, data):
-        logging.error(data)
         time = data['neutrino_time']
         if 'detector_id' in data:
             det = data['detector_id']
         else:
-            det = self.last_source
-        logging.error(det)
+            # if detector_id is not in the payload, then assume we are running a MC trial
+            # search the name of the detector in data['gen']['neutrino_times']
+            #det = self.last_source
+            for det_name, nu_time in data['gen']['neutrino_times'].items():
+                if nu_time == time:
+                    det = det_name
+
         self.measured_times[det] = time
 
         self.map[self.last_source] = data.copy()
@@ -186,7 +189,7 @@ class Chi2Calculator(Node):
             sum_s += s
             sum_ns += ns
         self.arrival = (sum_s / (len(measured) + 1), sum_ns / (len(measured) + 1))
-        logging.error(self.arrival)
+
 
         # Takes only the detectors for which time has been measured
         if len(measured) < 1:
@@ -195,7 +198,7 @@ class Chi2Calculator(Node):
         self.precision_matrix = self.generatePrecisionMatrix(measured_det_info, det0_info)
         map = self.generate_map(measured, measured_det_info, det0_time, det0_info)
 
-        logging.error(map)
+
         data['map'] = map
         data['n_of_detectors'] = n_of_detectors
 
@@ -204,12 +207,12 @@ class Chi2Calculator(Node):
             if self.map[k]['valid']:
                 hlist.append(self.map[k]['history'])
         data['history'].combine(hlist)
-        logging.error(data)
         return data
 
 
     def alert(self, data):
         data = self.calculate_skymap(data)
+        logging.warning(data)
         return data
 
     def revoke(self, data):
@@ -218,6 +221,7 @@ class Chi2Calculator(Node):
             det = data['detector_id']
         else:
             det = self.last_source
+
         # Check if the time has changed, otherwise there is no point in recalculating the skymap
         if self.measured_times[det] == time:
             return False
