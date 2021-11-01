@@ -9,3 +9,5 @@ from .NeutrinoArrivalTime import NeutrinoArrivalTime
 from .TimeOffset import TimeOffset
 
 from .Combine import Combine
+
+from .TrueDist import TrueDist
