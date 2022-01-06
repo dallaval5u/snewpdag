@@ -34,14 +34,18 @@ class Pass(Node):
         print('{0}{1}: {2}'.format(indent, k, v))
 
   def alert(self, data):
+    print('ok')
     self.count += 1
     if self.line > 0:
       if self.count == 1 or self.count % self.line == 0:
         print('{0}: received {1} alerts'.format(self.name, self.count))
+        #self.print_dict('', data)
+        print(data)
     if self.dump > 0:
       if self.count == 1 or self.count % self.dump == 0:
         print('>>>> {0} >>>> ({1}) alert'.format(self.name, self.count))
         self.print_dict('', data)
+
         print('<<<< {} <<<<'.format(self.name))
     return True
 
@@ -54,7 +58,7 @@ class Pass(Node):
 
   def report(self, data):
     print('>>>> {0} >>>> ({1}) report'.format(self.name, self.count))
-    self.print_dict('', data)
+    #self.print_dict('', data)
     print('<<<< {} <<<<'.format(self.name))
     return True
 

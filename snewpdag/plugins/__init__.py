@@ -20,7 +20,8 @@ from .Accumulator import Accumulator
 from .SeriesBinner import SeriesBinner
 from .BinnedAccumulator import BinnedAccumulator
 from .ActionFilter import ActionFilter
-
+#from .KM3_validator.py import KM3_validator
+from .DtsCalculator import DtsCalculator
 from .DistCalc1 import DistCalc1
 from .DistCalc2 import DistCalc2
 from .MeanDist import MeanDist

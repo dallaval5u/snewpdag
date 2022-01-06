@@ -170,6 +170,8 @@ def inject(dags, data, nodespecs):
   If the DAG doesn't exist for this burst, create a new one.
   """
   if type(data) is dict:
+    print('my data is a dictionary')
+    print(dags)
     inject_one(dags, data, nodespecs)
   elif type(data) is list:
     for d in data:
@@ -181,12 +183,18 @@ def inject(dags, data, nodespecs):
 def inject_one(dags, data, nodespecs):
   burst_id = 0
   if 'burst_id' in data:
+    print('burst_id is in my data')
     burst_id = data['burst_id']
+    print(dags)
   if burst_id not in dags:
+    print('burst_id is not in my data')
     dags[burst_id] = configure(nodespecs)
     if dags[burst_id] == None:
       logging.error('Invalid configuration for burst id {}'.format(burst_id))
       sys.exit(2)
   dag = dags[burst_id]
+  print(dags)
   dag[data['name']].update(data)
+  print('this is my dag:')
+  print(dag)
 

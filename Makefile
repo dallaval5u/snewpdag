@@ -28,9 +28,15 @@ trial:
 	python snewpdag/trials/Simple.py Control -n 10 | \
           python -m snewpdag --jsonlines snewpdag/data/test-gen-config.py
 
+
 trial2:
-	python snewpdag/trials/Simple.py Control -n 10 | \
-          python -m snewpdag --log INFO --jsonlines snewpdag/data/test-liq-config.py
+	python snewpdag/trials/sub.py --input /home/riccardo/Documents/GitHub/snewpdag/SNEWS_MSGs/subscribed_messages.json --log INFO --jsonlines snewpdag/data/test-liq-config.py #|  \
+          #python -m snewpdag --log INFO --jsonlines snewpdag/data/test-liq-config.py
+
+
+#trial2:
+#	python snewpdag/trials/Simple.py Control -n 1 | \
+#          python -m snewpdag --log INFO --jsonlines snewpdag/data/test-liq-config.py
 
 diffpointing:
 	python snewpdag/trials/Simple.py Control -n 1 | \
