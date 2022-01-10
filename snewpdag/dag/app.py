@@ -4,13 +4,50 @@ SNEWPDAG application.
 See README for details of the configuration and input data files.
 """
 
-import os, sys, argparse
-import importlib
-import logging
-import ast
-import csv
+import os, sys, argparse, json, click, hop, time, logging, importlib, ast, csv
 import numpy as np
 from . import Node
+#add mu own import path for now
+sys.path.insert(1, '/home/riccardo/Documents/GitHub/snewpdag')
+from snewpdag import dag
+import snewpdag.dag.app
+from hop import stream
+#from . import snews_pt_utils
+from hop.io import StartPosition
+sys.path.insert(1, '/home/riccardo/SNEWS_Publishing_Tools/SNEWS_PT')
+import snews_pt_utils
+
+
+
+def save_message(message, counter):
+  """ Save messages to a json file.
+  """
+  #S = Subscriber()
+  path = f'SNEWS_MSGs/'
+  os.makedirs(path, exist_ok=True)
+  file = path + 'subscribed_messages.json'
+  # read the existing file
+  try:
+    data = json.load(open(file))
+    if not isinstance(data, dict):
+      print('Incompatible file format!')
+      return None
+    # TODO: deal with `list` type objects
+  except:
+    data = {}
+
+  # RICCARDO: temporarily adding fields to the alert message (which I would like to receive)
+  index_coincidence = str(counter)
+  data['action'] = 'alert'
+  data['burst_id'] = 0
+  data['name'] = 'Control'
+  data['coinc_id'] = 1
+  data['number_of_coinc_dets'] = index_coincidence
+  data['coinc' + index_coincidence] = message
+
+  with open(file, 'w') as outfile:
+    json.dump(data, outfile)
+
 
 def run():
   """
@@ -30,7 +67,9 @@ def run():
                       help='each input line contains one JSON object to inject')
   parser.add_argument('--log', help='logging level')
   parser.add_argument('--seed', help='random number seed')
+  parser.add_argument('--stream', help= "read from the stream")
   args = parser.parse_args()
+  alert_topic = "kafka://localhost:9092/snews.alert-test"
 
   if args.log:
     numeric_level = getattr(logging, args.log.upper(), None)
@@ -61,10 +100,25 @@ def run():
       if args.jsonlines:
         for jsonline in f:
           data = ast.literal_eval(jsonline)
+          print(data)
           inject(dags, data, nodespecs)
       else:
         data = ast.literal_eval(f.read())
         inject(dags, data, nodespecs)
+
+  elif args.stream: #toadd
+      # with stream.open(self.alert_topic, "r") as s:
+      s = stream.open(alert_topic, "r") #add dependencies
+      counter = 0
+      for message in s:
+        counter +=1
+        print(message)
+        save_message(message, counter)
+        with open('/home/riccardo/Documents/GitHub/snewpdag/SNEWS_MSGs/subscribed_messages.json') as f:
+          data = ast.literal_eval(f.read())
+          print(' I am injecting this data into a dag:')
+          print(data)
+          inject(dags, data, nodespecs)
   else:
     if args.jsonlines:
       for jsonline in sys.stdin:
@@ -187,7 +241,7 @@ def inject_one(dags, data, nodespecs):
     burst_id = data['burst_id']
     print(dags)
   if burst_id not in dags:
-    print('burst_id is not in my data')
+    print('burst_id {} is not in my data'.format(burst_id))
     dags[burst_id] = configure(nodespecs)
     if dags[burst_id] == None:
       logging.error('Invalid configuration for burst id {}'.format(burst_id))
