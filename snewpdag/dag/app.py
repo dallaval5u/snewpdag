@@ -4,18 +4,18 @@ SNEWPDAG application.
 See README for details of the configuration and input data files.
 """
 
-import os, sys, argparse, json, click, hop, time, logging, importlib, ast, csv
+import os, sys, argparse, json, logging, importlib, ast, csv
 import numpy as np
 from . import Node
 #add mu own import path for now
-sys.path.insert(1, '/home/riccardo/Documents/GitHub/snewpdag')
+#sys.path.insert(1, '/home/riccardo/Documents/GitHub/snewpdag')
 from snewpdag import dag
-import snewpdag.dag.app
+#import snewpdag.dag.app
 from hop import stream
 #from . import snews_pt_utils
-from hop.io import StartPosition
-sys.path.insert(1, '/home/riccardo/SNEWS_Publishing_Tools/SNEWS_PT')
-import snews_pt_utils
+#from hop.io import StartPosition
+#sys.path.insert(1, '/home/riccardo/SNEWS_Publishing_Tools/SNEWS_PT')
+#import snews_pt_utils
 
 
 
