@@ -67,7 +67,7 @@ def run():
                       help='each input line contains one JSON object to inject')
   parser.add_argument('--log', help='logging level')
   parser.add_argument('--seed', help='random number seed')
-  parser.add_argument('--stream', help= "read from the stream")
+  parser.add_argument('--stream', help="read from the stream")
   args = parser.parse_args()
   alert_topic = "kafka://localhost:9092/snews.alert-test"
 
@@ -118,7 +118,8 @@ def run():
           data = ast.literal_eval(f.read())
           print(' I am injecting this data into a dag:')
           print(data)
-          inject(dags, data, nodespecs)
+          if int(data['number_of_coinc_dets']) > 1:
+            inject(dags, data, nodespecs)
   else:
     if args.jsonlines:
       for jsonline in sys.stdin:
