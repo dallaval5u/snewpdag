@@ -7,7 +7,20 @@ See README for details of the configuration and input data files.
 import os, sys, argparse, json, logging, importlib, ast, csv
 import numpy as np
 from . import Node
-from hop import stream
+parser = argparse.ArgumentParser()
+parser.add_argument('config', help='configuration py/json/csv file')
+parser.add_argument('--input', help='input data py/json file')
+parser.add_argument('--jsonlines', action='store_true',
+                    help='each input line contains one JSON object to inject')
+parser.add_argument('--log', help='logging level')
+parser.add_argument('--seed', help='random number seed')
+parser.add_argument('--stream', help="read from the stream")
+args = parser.parse_args()
+if args.stream:
+  try:
+    from hop import stream
+  except:
+    pass
 
 
 def save_message(message):
@@ -40,15 +53,6 @@ def run():
   I know, this kind of sucks, but the alternative is importing another
   third-party module which provides more functionality than is needed here.
   """
-  parser = argparse.ArgumentParser()
-  parser.add_argument('config', help='configuration py/json/csv file')
-  parser.add_argument('--input', help='input data py/json file')
-  parser.add_argument('--jsonlines', action='store_true',
-                      help='each input line contains one JSON object to inject')
-  parser.add_argument('--log', help='logging level')
-  parser.add_argument('--seed', help='random number seed')
-  parser.add_argument('--stream', help="read from the stream")
-  args = parser.parse_args()
   local_alert_topic = "kafka://localhost:9092/snews.alert-test" #pick a local topic for now
   online_alert_topic = "kafka://$hop_broker/snews.alert-test" #put the name of the online hop broker
 
