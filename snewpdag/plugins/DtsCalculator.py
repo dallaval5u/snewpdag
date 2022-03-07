@@ -40,35 +40,36 @@ class DtsCalculator(Node):
             Extract neutrino time for each detector
             '''
             index = self.last_watch_index()
-            print(index)
             self.valid[index] = False
-
+            index_detector = data['detector_names'].index(data['det_data'])
             if index in self.times:
                 burst_time = self.times[index]
             else:
                 burst_time = None
-            if data['coinc'].get('neutrino_time') is tuple:
-                self.times[index] = data['coinc'].get('neutrino_time')
+
+            if data['neutrino_times'][index_detector] is tuple:
+                self.times[index] = data['neutrino_times'][index]
             else:
-                time_tuple = (int(data['coinc'].get('neutrino_time').split(':')[-2]), int(data['coinc'].get('neutrino_time').split(':')[-1])*1000)
+                #### From this kind of data '22/01/01 12:30:55:678999' get a tuple (s, ms)
+                time_tuple = (int(data['neutrino_times'][index_detector].split(':')[-2]), int(data['neutrino_times'][index_detector].split(':')[-1])*1000)
                 self.times[index] = time_tuple
                 logging.info(time_tuple)
 
+            ############################### Use fake names because we do not have a properties table with DM detectors
+            fake_names = ['JUNO', 'KM3', 'SK', 'SNOP', 'KL']
+            self.dets_names[index] = fake_names[index]
+            ###############################
 
-            # comment: will we have an entry data['gen']['neutrino_times'] for non mc data?
-            #for det_name, nu_time in data['gen']['neutrino_times'].items():
-                #if nu_time == self.times[index]:
-            #print(data)
-            self.dets_names[index] = data['coinc']['detector_name']
             # extract uncertainty and bias
             if 'sigma' in data:
                 self.sigma_dict[index] = data['sigma']
             else:
-                self.sigma_dict[index] = self.db.get(data['coinc']['detector_name']).sigma
+                self.sigma_dict[index] = self.db.get(fake_names[index]).sigma
+
             if 'bias' in data:
                 self.bias_dict[index] = data['bias']
             else:
-                self.bias_dict[index] = self.db.get(data['coinc']['detector_name']).bias
+                self.bias_dict[index] = self.db.get(fake_names[index]).bias
 
             # check whether an experiment is revoking its data:
             if self.times[index] != burst_time:
@@ -79,9 +80,9 @@ class DtsCalculator(Node):
                         return data
                 else:
                     self.valid[index] = True
-            print(self.valid)
-            print(self.valid.values())
-            print(self.dets_names)
+            #print(self.valid)
+            #print(self.valid.values())
+            #print(self.dets_names)
             return False
 
         def compute_dts(self, data):
@@ -93,7 +94,8 @@ class DtsCalculator(Node):
             best_detector_name = self.dets_names[best_detector_index]
             best_det_time = self.times[best_detector_index]
 
-            for i in range(len(self.times)):
+            #print(self.sigma_dict)
+            for i in list(self.times.keys()):
                 if self.times[i] != best_det_time:
                     if 'dts' not in data:
                         data['dts'] = {(best_detector_name, self.dets_names[i]): {'dt':
@@ -135,19 +137,16 @@ class DtsCalculator(Node):
 
         def alert(self, data):
             # keep tracking of histories
-            logging.info('entering_dtscalc')
             source = self.last_source
             self.map[source] = data.copy()
-            print(self.map)
             self.map[source]['history'] = data['history'].copy()  # keep local copy
             self.map[source]['valid'] = True
 
-            print(self.map)
             # extract neutrino time for each detector:
             self.find_nu_times(data)
 
             # compute the dts if we have two or more valid inputs
-            if sum(self.valid.values()) >= 2:
+            if sum(self.valid.values()) == data['number_of_coinc_dets'] and sum(self.valid.values()) > 1:
                 self.compute_dts(data)
                 # update history
                 hlist = []

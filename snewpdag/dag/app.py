@@ -7,22 +7,26 @@ See README for details of the configuration and input data files.
 import os, sys, argparse, json, logging, importlib, ast, csv
 import numpy as np
 from . import Node
-#add mu own import path for now
-#sys.path.insert(1, '/home/riccardo/Documents/GitHub/snewpdag')
-from snewpdag import dag
-#import snewpdag.dag.app
-from hop import stream
-#from . import snews_pt_utils
-#from hop.io import StartPosition
-#sys.path.insert(1, '/home/riccardo/SNEWS_Publishing_Tools/SNEWS_PT')
-#import snews_pt_utils
 
+parser = argparse.ArgumentParser()
+parser.add_argument('config', help='configuration py/json/csv file')
+parser.add_argument('--input', help='input data py/json file')
+parser.add_argument('--jsonlines', action='store_true', help='each input line contains one JSON object to inject')
+parser.add_argument('--log', help='logging level')
+parser.add_argument('--seed', help='random number seed')
+parser.add_argument('--stream', help="read from the stream")
+args = parser.parse_args()
+if args.stream:
+  try:
+    from hop import stream
+  except:
+    logging.info('Not importing the hop client')
+    pass
 
 
 def save_message(message, counter):
   """ Save messages to a json file.
   """
-  #S = Subscriber()
   path = f'SNEWS_MSGs/'
   os.makedirs(path, exist_ok=True)
   file = path + 'subscribed_messages.json'
@@ -36,13 +40,13 @@ def save_message(message, counter):
   except:
     data = {}
 
-  # RICCARDO: temporarily adding fields to the alert message (which I would like to receive)
+  # Adding fields to the alert message (which are needed to run the dags)
+  # TODO: manage 'update' alerts
   index_coincidence = str(counter)
-  data['action'] = 'alert'
-  data['burst_id'] = 0
-  data['name'] = 'Control'
-  data['coinc_id'] = 1
-  data['number_of_coinc_dets'] = index_coincidence
+  if message['_id'].split("_")[3] == 'ALERT':
+    message['action'] = 'alert'
+  message['name'] = 'Control'
+  message['number_of_coinc_dets'] = len(message['detector_names'])
   data['coinc' + index_coincidence] = message
 
   with open(file, 'w') as outfile:
@@ -58,17 +62,10 @@ def run():
 
   With the --jsonlines option, read from stdin assuming one json object/line.
   I know, this kind of sucks, but the alternative is importing another
-  third-party module which provides more functionality than is needed here.
+  third-party mo
+  dule which provides more functionality than is needed here.
   """
-  parser = argparse.ArgumentParser()
-  parser.add_argument('config', help='configuration py/json/csv file')
-  parser.add_argument('--input', help='input data py/json file')
-  parser.add_argument('--jsonlines', action='store_true',
-                      help='each input line contains one JSON object to inject')
-  parser.add_argument('--log', help='logging level')
-  parser.add_argument('--seed', help='random number seed')
-  parser.add_argument('--stream', help="read from the stream")
-  args = parser.parse_args()
+  # use a local kafka topic, check the environment file of snews_pt for running online
   alert_topic = "kafka://localhost:9092/snews.alert-test"
 
   if args.log:
@@ -100,26 +97,29 @@ def run():
       if args.jsonlines:
         for jsonline in f:
           data = ast.literal_eval(jsonline)
-          print(data)
+          #print(data)
           inject(dags, data, nodespecs)
       else:
         data = ast.literal_eval(f.read())
         inject(dags, data, nodespecs)
 
-  elif args.stream: #toadd
+  elif args.stream:
       # with stream.open(self.alert_topic, "r") as s:
-      s = stream.open(alert_topic, "r") #add dependencies
+      s = stream.open(alert_topic, "r")
       counter = 0
       for message in s:
         counter +=1
-        print(message)
+        #### restart the counter if more than 2 coincidences (only temporaraly)
+        #if counter == 4:
+        #  counter = 1
+        index_coincidence = str(counter)
+        #print(message)
         save_message(message, counter)
-        with open('/home/riccardo/Documents/GitHub/snewpdag/SNEWS_MSGs/subscribed_messages.json') as f:
+        with open('SNEWS_MSGs/subscribed_messages.json') as f:
           data = ast.literal_eval(f.read())
-          print(' I am injecting this data into a dag:')
-          print(data)
-          if int(data['number_of_coinc_dets']) > 1:
-            inject(dags, data, nodespecs)
+          #print(' I am injecting this data into a dag:')
+          #print(data)
+          inject(dags, data['coinc' + index_coincidence], nodespecs, counter)
   else:
     if args.jsonlines:
       for jsonline in sys.stdin:
@@ -218,38 +218,31 @@ def configure(nodespecs):
 
   return nodes
 
-def inject(dags, data, nodespecs):
+def inject(dags, data, nodespecs, counter):
   """
   Send data through DAG.
   If there is no burst identifier, assume it's 0.
   If the DAG doesn't exist for this burst, create a new one.
   """
   if type(data) is dict:
-    print('my data is a dictionary')
-    print(dags)
-    inject_one(dags, data, nodespecs)
+    #print('my data is a dictionary')
+    #print(dags)
+    inject_one(dags, data, nodespecs, counter)
   elif type(data) is list:
     for d in data:
       inject_one(dags, d, nodespecs)
+
   else:
     logging.error('What is this input data?')
     sys.exit(2)
 
-def inject_one(dags, data, nodespecs):
-  burst_id = 0
-  if 'burst_id' in data:
-    print('burst_id is in my data')
-    burst_id = data['burst_id']
-    print(dags)
-  if burst_id not in dags:
-    print('burst_id {} is not in my data'.format(burst_id))
-    dags[burst_id] = configure(nodespecs)
-    if dags[burst_id] == None:
-      logging.error('Invalid configuration for burst id {}'.format(burst_id))
-      sys.exit(2)
-  dag = dags[burst_id]
-  print(dags)
+def inject_one(dags, data, nodespecs, counter):
+  
+  index_coincidence = str(counter)
+  dags['dag_coinc' + index_coincidence] = configure(nodespecs)
+  dag = dags['dag_coinc' + index_coincidence]
+  #print(dags)
   dag[data['name']].update(data)
-  print('this is my dag:')
-  print(dag)
+  #print('this is my dag:')
+  #print(dag)
 

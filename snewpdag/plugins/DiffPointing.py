@@ -151,9 +151,30 @@ class DiffPointing(Node):
     m -= chi2_min
     data['map'] = m
     data['ndof'] = 2
+    #print(data)
     return data
 
   def alert(self, data):
+    ###################fake dts: alert nu_times being sent from the server right now are of the order of seconds
+    data['dts'][list(data['dts'].keys())[0]]['dt'] = (0, 40)
+    try:
+      data['dts'][list(data['dts'].keys())[1]]['dt'] = (0, 40)
+    except:
+      pass
+    try:
+      data['dts'][list(data['dts'].keys())[2]]['dt'] = (0, 40)
+    except:
+      pass
+    try:
+      data['dts'][list(data['dts'].keys())[3]]['dt'] = (0, 40)
+    except:
+      pass
+    try:
+      data['dts'][list(data['dts'].keys())[4]]['dt'] = (0, 40)
+    except:
+      pass
+    ########################
+
     if 'dts' in data: # dictionary of time differences
       for k in data['dts']:
         # verify that the detector is in the database

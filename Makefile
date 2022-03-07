@@ -25,11 +25,8 @@ histogram:
           snewpdag/data/test-dags-hist-config.json
 
 trial:
-	python snewpdag/trials/Simple.py Control -n 10 > my_json_structure_test.txt
-#| \
+	python snewpdag/trials/Simple.py Control -n 1 | \
           python -m snewpdag --jsonlines snewpdag/data/test-gen-config.py
-
-
 trial2:
 	python -m snewpdag --stream STREAM --log INFO --jsonlines snewpdag/data/test-liq-config.py #python #snewpdag/trials/sub.py --stream STREAM --log INFO --jsonlines snewpdag/data/test-liq-config.py #--input /home/riccardo/Documents/GitHub/snewpdag/SNEWS_MSGs/subscribed_messages_test.json --log INFO --jsonlines snewpdag/data/test-liq-config.py #|  \
           #python -m snewpdag --log INFO --jsonlines snewpdag/data/test-liq-config.py
