@@ -2,5 +2,6 @@
 
 SNEWS2 alert (pointing) calculations.
 
-Please see the wiki for information on [setting up](https://github.com/SNEWS2/snewpdag/wiki/Installation)
-and [developing code](https://github.com/SNEWS2/snewpdag/wiki/Development), and for module documentation.
+# Hop stream
+For testing purposes alerts are read from a Local server. When reading the alerts online is necessary, then set the online hop-broker in app.py
+online_alert_topic = "kafka://"kafka.scimma.org"/snews.alert-test"
