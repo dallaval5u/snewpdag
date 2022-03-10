@@ -47,6 +47,7 @@ def save_message(message, counter):
     message['action'] = 'alert'
   message['name'] = 'Control'
   message['number_of_coinc_dets'] = len(message['detector_names'])
+  message['coinc_id'] = 'coinc' + index_coincidence
   data['coinc' + index_coincidence] = message
 
   with open(file, 'w') as outfile:
@@ -67,6 +68,8 @@ def run():
   """
   # use a local kafka topic, check the environment file of snews_pt for running online
   alert_topic = "kafka://localhost:9092/snews.alert-test"
+
+  counter = 0 # keep track of the number of coincidence
 
   if args.log:
     numeric_level = getattr(logging, args.log.upper(), None)
@@ -98,36 +101,30 @@ def run():
         for jsonline in f:
           data = ast.literal_eval(jsonline)
           #print(data)
-          inject(dags, data, nodespecs)
+          inject(dags, data, nodespecs, counter)
       else:
         data = ast.literal_eval(f.read())
-        inject(dags, data, nodespecs)
+        inject(dags, data, nodespecs, counter)
 
   elif args.stream:
       # with stream.open(self.alert_topic, "r") as s:
       s = stream.open(alert_topic, "r")
-      counter = 0
       for message in s:
-        counter +=1
-        #### restart the counter if more than 2 coincidences (only temporaraly)
-        #if counter == 4:
-        #  counter = 1
+        counter +=1 ### which coincidence is this?
         index_coincidence = str(counter)
-        #print(message)
         save_message(message, counter)
         with open('SNEWS_MSGs/subscribed_messages.json') as f:
           data = ast.literal_eval(f.read())
           #print(' I am injecting this data into a dag:')
-          #print(data)
           inject(dags, data['coinc' + index_coincidence], nodespecs, counter)
   else:
     if args.jsonlines:
       for jsonline in sys.stdin:
         data = ast.literal_eval(jsonline)
-        inject(dags, data, nodespecs)
+        inject(dags, data, nodespecs, counter)
     else:
       data = ast.literal_eval(sys.stdin.read())
-      inject(dags, data, nodespecs)
+      inject(dags, data, nodespecs, counter)
 
 def csv_eval(infile):
   # name, class, observe
@@ -225,12 +222,10 @@ def inject(dags, data, nodespecs, counter):
   If the DAG doesn't exist for this burst, create a new one.
   """
   if type(data) is dict:
-    #print('my data is a dictionary')
-    #print(dags)
     inject_one(dags, data, nodespecs, counter)
   elif type(data) is list:
     for d in data:
-      inject_one(dags, d, nodespecs)
+      inject_one(dags, d, nodespecs, counter)
 
   else:
     logging.error('What is this input data?')
@@ -241,8 +236,4 @@ def inject_one(dags, data, nodespecs, counter):
   index_coincidence = str(counter)
   dags['dag_coinc' + index_coincidence] = configure(nodespecs)
   dag = dags['dag_coinc' + index_coincidence]
-  #print(dags)
   dag[data['name']].update(data)
-  #print('this is my dag:')
-  #print(dag)
-
