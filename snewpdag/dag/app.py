@@ -232,8 +232,8 @@ def inject(dags, data, nodespecs, counter):
     sys.exit(2)
 
 def inject_one(dags, data, nodespecs, counter):
-  
   index_coincidence = str(counter)
-  dags['dag_coinc' + index_coincidence] = configure(nodespecs)
+  if 'dag_coinc' + index_coincidence not in dags:
+    dags['dag_coinc' + index_coincidence] = configure(nodespecs)
   dag = dags['dag_coinc' + index_coincidence]
   dag[data['name']].update(data)
