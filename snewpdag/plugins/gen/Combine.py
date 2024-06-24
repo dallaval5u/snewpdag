@@ -35,6 +35,7 @@ class Combine(Node):
     tsa = [] # list of times arrays to concatenate
     for d in data['gen']:
       if 'times' in d:
+        print(d)
         tsa.append(d['times'])
     if len(tsa) > 0:
       data['times'] = np.concatenate(tsa)

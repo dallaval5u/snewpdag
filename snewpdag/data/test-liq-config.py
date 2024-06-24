@@ -9,6 +9,40 @@
   },
 
   {
+    "name": "test_arr_time", "class": "gen.NeutrinoArrivalTime",
+    "observe": ["Control"],
+    "kwargs": {
+      "detector_list": ["JUNO","SK"],
+      "detector_location": "snewpdag/data/detector_location.csv"
+    }
+  },
+
+  {"name": "test_offset_time", "class":"gen.TimeOffset",
+   "observe": ["test_arr_time"],
+   "kwargs": {"detector_location": "snewpdag/data/detector_location.csv"}
+   },
+
+##### test time diff module from entry neutrino time
+
+  {"name": "test_det_time_SK", "class": "gen.DetectorTime",
+   "observe": ["test_offset_time"],
+   "kwargs": {"detector": "SK"}
+   },
+
+
+  {"name": "test_det_time_JUNO", "class": "gen.DetectorTime",
+   "observe": ["test_offset_time"],
+   "kwargs": {"detector": "JUNO"}
+   },
+
+  {"name": "test_nutime_extraction", "class": "gen.DeltaTCalculator",
+   "observe": ["test_det_time_JUNO","test_det_time_SK"]
+   },
+
+
+
+
+  {
     "name": "JUNO-ts", "class": "gen.TimeSeries",
     "observe": [ "Control" ],
     "kwargs": {
@@ -139,6 +173,16 @@
       "filename": "output/gen-liq-{}-{}-{}.png"
     }
   }
+    ,
+
+ #   {
+ #       "name": "test_ki2_calculator", "class": "Chi2Calculator",
+ #       "observe": ["JUNO", "SNOP"],
+ #       "kwargs": {
+ #           "detector_list": ["SNOP", "JUNO"],
+ #           "detector_location": "snewpdag/data/detector_location.csv",
+ #           "NSIDE": 32}
+ #   }
 
 ]
 

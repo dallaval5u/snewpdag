@@ -1,5 +1,6 @@
 from .Pass import Pass
 
+from .Chi2Calculator import Chi2Calculator
 from .TimeSeriesInput import TimeSeriesInput
 from .TimeDistInput import TimeDistInput
 from .TimeDistFileInput import TimeDistFileInput
@@ -20,6 +21,13 @@ from .Accumulator import Accumulator
 from .SeriesBinner import SeriesBinner
 from .BinnedAccumulator import BinnedAccumulator
 from .ActionFilter import ActionFilter
+
+from .DistCalc1 import DistCalc1
+from .DistCalc2 import DistCalc2
+from .MeanDist import MeanDist
+from .DistErrCalc import DistErrCalc
+from .ScatterPlot import ScatterPlot
+from .Residual import Residual
 
 from .ValidateKey import ValidateKey
 from .ValidateKeyType import ValidateKeyType
